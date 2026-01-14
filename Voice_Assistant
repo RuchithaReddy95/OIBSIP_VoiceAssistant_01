@@ -1,0 +1,76 @@
+import speech_recognition as sr
+import pyttsx3
+import webbrowser
+import datetime
+import time
+
+# Initialize text-to-speech engine
+engine = pyttsx3.init()
+engine.setProperty('rate', 160)
+
+# Initialize speech recognizer
+recognizer = sr.Recognizer()
+recognizer.pause_threshold = 0.8
+recognizer.energy_threshold = 300
+
+# Function to speak text
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
+
+# Function to listen to user
+def listen():
+    with sr.Microphone() as source:
+        print("🎤 Speak now...")
+        audio = recognizer.listen(source, timeout=None, phrase_time_limit=6)
+
+    try:
+        text = recognizer.recognize_google(audio)
+        print("🗣 You said:", text)
+        return text.lower()
+    except sr.UnknownValueError:
+        print("❌ Could not understand")
+        return ""
+    except sr.RequestError:
+        print("❌ Network error")
+        return ""
+
+# Function to handle commands
+def handle_command(command):
+    if "open google" in command:
+        speak("Opening Google")
+        webbrowser.open("https://www.google.com")
+    elif "open youtube" in command:
+        speak("Opening YouTube")
+        webbrowser.open("https://www.youtube.com")
+    elif "play" in command:
+        # Extract song name after 'play'
+        song = command.replace("play", "").strip()
+        if song:
+            speak(f"Playing {song} on YouTube")
+            webbrowser.open(f"https://www.youtube.com/results?search_query={song}")
+        else:
+            speak("Please tell me the song name after saying play")
+    elif "time" in command or "what is the time" in command or "what time is it" in command:
+        now = datetime.datetime.now().strftime("%I:%M %p")
+        speak(f"The time is {now}")
+    elif "stop" in command or "exit" in command or "goodbye" in command:
+        speak("I’m exited. Goodbye!")
+        return False
+    else:
+        speak("You said " + command)
+    return True
+
+# Main assistant loop
+def start_assistant():
+    speak("Hello. I am ready.")
+    time.sleep(0.5)
+
+    running = True
+    while running:
+        command = listen()
+        if command:
+            running = handle_command(command)
+
+# Run the assistant
+start_assistant()
